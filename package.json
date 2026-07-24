@@ -1,8 +1,8 @@
 {
   "name": "opencode-pty",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "module": "dist/index.js",
+  "main": "index.ts",
+  "types": "index.ts",
+  "module": "index.ts",
   "version": "0.3.6",
   "description": "OpenCode plugin for interactive PTY management - run background processes, send input, read output with regex filtering",
   "author": "shekohex",
@@ -28,34 +28,36 @@
   },
   "homepage": "https://github.com/shekohex/opencode-pty#readme",
   "files": [
-    "dist"
+    "dist",
+    "index.ts",
+    "src"
   ],
   "license": "MIT",
   "type": "module",
   "exports": {
     "./server": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./index.ts",
+      "default": "./index.ts"
     },
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./index.ts",
+      "default": "./index.ts"
     },
     "./*": {
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
     },
     "./*/*": {
-      "types": "./dist/src/*/*.d.ts",
-      "default": "./dist/src/*/*.js"
+      "types": "./src/*/*.ts",
+      "default": "./src/*/*.ts"
     },
     "./*/*/*": {
-      "types": "./dist/src/*/*/*.d.ts",
-      "default": "./dist/src/*/*/*.js"
+      "types": "./src/*/*/*.ts",
+      "default": "./src/*/*/*.ts"
     },
     "./*/*/*/*": {
-      "types": "./dist/src/*/*/*/*.d.ts",
-      "default": "./dist/src/*/*/*/*.js"
+      "types": "./src/*/*/*/*.ts",
+      "default": "./src/*/*/*/*.ts"
     }
   },
   "scripts": {
@@ -66,7 +68,6 @@
     "build:plugin": "tsc -p tsconfig.build.json && bun x copyfiles -u 0 \"src/**/*.txt\" dist",
     "build:dev": "bun clean && bun build:plugin && vite build --mode development",
     "build:prod": "bun clean && bun build:plugin && vite build --mode production",
-    "prepack": "bun build:prod",
     "clean": "rm -rf dist playwright-report test-results",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
