@@ -1,6 +1,7 @@
 import type { PluginContext, PluginResult } from './plugin/types.ts'
 import { initManager, manager } from './plugin/pty/manager.ts'
 import { initPermissions } from './plugin/pty/permissions.ts'
+import { initSessionEnv } from './plugin/pty/session-env.ts'
 import { ptySpawn } from './plugin/pty/tools/spawn.ts'
 import { ptyWrite } from './plugin/pty/tools/write.ts'
 import { ptyRead } from './plugin/pty/tools/read.ts'
@@ -12,9 +13,11 @@ import open from 'open'
 const ptyOpenClientCommand = 'pty-open-background-spy'
 const ptyShowServerUrlCommand = 'pty-show-server-url'
 
-export const PTYPlugin = async ({ client, directory }: PluginContext): Promise<PluginResult> => {
+export const PTYPlugin = async (context: PluginContext): Promise<PluginResult> => {
+  const { client, directory } = context
   initPermissions(client, directory)
   initManager(client)
+  initSessionEnv(context)
   let ptyServer: PTYServer | undefined
 
   return {

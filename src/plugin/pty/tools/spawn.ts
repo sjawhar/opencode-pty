@@ -1,6 +1,7 @@
 import { tool } from '@opencode-ai/plugin'
 import { manager } from '../manager.ts'
 import { checkCommandPermission, checkWorkdirPermission } from '../permissions.ts'
+import { sessionEnvFor } from '../session-env.ts'
 import DESCRIPTION from './spawn.txt'
 
 const NOTIFY_ON_EXIT_INSTRUCTIONS = [
@@ -47,11 +48,19 @@ export const ptySpawn = tool({
     }
 
     const sessionId = ctx.sessionID
+    // A PTY is a session-owned child process, so it gets the session's
+    // environment; declared entries still win. Left absent when neither
+    // contributes, so a spawn with no environment keeps its previous shape.
+    const sessionEnv = await sessionEnvFor(sessionId)
+    const env =
+      Object.keys(sessionEnv).length === 0 && !args.env
+        ? undefined
+        : { ...sessionEnv, ...args.env }
     const info = manager.spawn({
       command: args.command,
       args: args.args,
       workdir: args.workdir,
-      env: args.env,
+      env,
       title: args.title,
       description: args.description,
       parentSessionId: sessionId,

@@ -4,6 +4,7 @@ import { ptyRead } from '../src/plugin/pty/tools/read.ts'
 import { ptyList } from '../src/plugin/pty/tools/list.ts'
 import { RingBuffer } from '../src/plugin/pty/buffer.ts'
 import { manager } from '../src/plugin/pty/manager.ts'
+import { initSessionEnv } from '../src/plugin/pty/session-env.ts'
 
 describe('PTY Tools', () => {
   afterAll(() => {
@@ -123,6 +124,59 @@ describe('PTY Tools', () => {
         'Never use sleep plus `pty_read` loops to check completion for this session.'
       )
       expect(result).toContain('</system_reminder>')
+    })
+
+    it('should give the child the session environment when the harness resolves one', async () => {
+      initSessionEnv({
+        directory: '/tmp',
+        sessionEnv: async ({ sessionID }: { sessionID: string }) => ({
+          SECRETSD_SESSION_TOKEN_FILE: `/run/secretsd/${sessionID}.token`,
+          SHARED: 'from-session',
+        }),
+      } as never)
+
+      await ptySpawn.execute(
+        { command: 'echo', args: ['hi'], description: 'Test', env: { SHARED: 'declared' } },
+        {
+          sessionID: 'parent-session-id',
+          messageID: 'msg-3',
+          agent: 'test-agent',
+          abort: new AbortController().signal,
+          metadata: () => {},
+          ask: async () => {},
+          directory: '/tmp',
+          worktree: '/tmp',
+        } as never
+      )
+
+      expect(manager.spawn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          env: {
+            SECRETSD_SESSION_TOKEN_FILE: '/run/secretsd/parent-session-id.token',
+            SHARED: 'declared',
+          },
+        })
+      )
+    })
+
+    it('should leave the environment absent when the harness cannot resolve one', async () => {
+      initSessionEnv({ directory: '/tmp' } as never)
+
+      await ptySpawn.execute(
+        { command: 'echo', args: ['hi'], description: 'Test' },
+        {
+          sessionID: 'parent-session-id',
+          messageID: 'msg-4',
+          agent: 'test-agent',
+          abort: new AbortController().signal,
+          metadata: () => {},
+          ask: async () => {},
+          directory: '/tmp',
+          worktree: '/tmp',
+        } as never
+      )
+
+      expect(manager.spawn).toHaveBeenCalledWith(expect.objectContaining({ env: undefined }))
     })
   })
 
